@@ -1,0 +1,6 @@
+{
+  "name": "UDAAN JEE - AI-Powered Free IIT-JEE Preparation",
+  "description": "Empowering government-school and aspiring students with free, high-quality IIT-JEE coaching, bridge foundation courses, NTA-style mock exam CBT simulator, and AI personal mentorship.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

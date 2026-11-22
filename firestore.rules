@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'knharikachithajallu@gmail.com'
+      );
+    }
+
+    function isTeacher() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) ||
+        isAdmin()
+      );
+    }
+
+    // 1. Users collection: Students can read & update only their own profile; admins can manage
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isTeacher() || isAdmin();
+      allow list: if isAdmin() || isTeacher();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 2. Academic Curriculum (Subjects & Chapters): Public read, Admin write
+    match /subjects/{subjectId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /chapters/{chapterId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Questions Bank: Read by signed-in users, write by teachers/admins
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher() || isAdmin();
+    }
+
+    // 4. Mock Tests: Read by signed-in users, write by teachers/admins
+    match /mockTests/{testId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher() || isAdmin();
+    }
+
+    // 5. Test Attempts: Student can create and view their own; teachers/admins can inspect
+    match /testAttempts/{attemptId} {
+      allow get: if isSignedIn() && (resource.data.studentId == request.auth.uid || isTeacher() || isAdmin());
+      allow list: if isSignedIn() && (
+        (request.query.limit <= 100 && resource.data.studentId == request.auth.uid) ||
+        isTeacher() ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.studentId == request.auth.uid && isValidId(attemptId);
+      allow update, delete: if isAdmin();
+    }
+
+    // 6. Student Progress: Owned by student; teachers can review
+    match /studentProgress/{studentId} {
+      allow get: if isOwner(studentId) || isTeacher() || isAdmin();
+      allow list: if isTeacher() || isAdmin();
+      allow create, update: if isOwner(studentId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 7. Study Plans: Private to student
+    match /studyPlans/{studentId} {
+      allow read, write: if isOwner(studentId) || isAdmin();
+    }
+
+    // 8. Study Materials: Read by all signed-in users, uploaded by teachers/admins
+    match /studyMaterials/{materialId} {
+      allow read: if true;
+      allow write: if isTeacher() || isAdmin();
+    }
+
+    // 9. AI Conversations: Private to student
+    match /aiConversations/{conversationId} {
+      allow read: if isSignedIn() && resource.data.studentId == request.auth.uid;
+      allow create, update: if isSignedIn() && request.resource.data.studentId == request.auth.uid && isValidId(conversationId);
+      allow delete: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAdmin());
+    }
+  }
+}

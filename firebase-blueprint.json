@@ -1,0 +1,194 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student, Teacher, or Admin user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["student", "teacher", "admin"] },
+        "classLevel": { "type": "string", "enum": ["Class 9", "Class 10", "Class 11", "Class 12", "Dropper"] },
+        "schoolType": { "type": "string", "enum": ["Government School", "Private School", "Other"] },
+        "targetExam": { "type": "string", "enum": ["JEE Main", "JEE Advanced", "Both"] },
+        "preferredLanguage": { "type": "string", "enum": ["English", "Telugu", "Hindi"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["uid", "fullName", "email", "role"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Academic subject metadata (Physics, Chemistry, Mathematics, Foundation)",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["subjectId", "name"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "Curriculum chapter details",
+      "type": "object",
+      "properties": {
+        "chapterId": { "type": "string", "maxLength": 64 },
+        "subjectId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 120 },
+        "stage": { "type": "string", "enum": ["foundation", "intermediate", "advanced"] },
+        "classLevel": { "type": "string", "maxLength": 20 },
+        "order": { "type": "number" },
+        "totalLectures": { "type": "number" }
+      },
+      "required": ["chapterId", "subjectId", "title", "stage"]
+    },
+    "StudyMaterial": {
+      "title": "StudyMaterial",
+      "description": "Notes, formula sheet, or worksheet resource",
+      "type": "object",
+      "properties": {
+        "materialId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 160 },
+        "subject": { "type": "string", "maxLength": 64 },
+        "chapter": { "type": "string", "maxLength": 120 },
+        "materialType": { "type": "string", "enum": ["notes", "formula_sheet", "pyq_booklet", "worksheet"] },
+        "storageUrl": { "type": "string", "maxLength": 500 },
+        "downloadCount": { "type": "number" }
+      },
+      "required": ["materialId", "title", "subject", "materialType"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Examination question with options and marking scheme",
+      "type": "object",
+      "properties": {
+        "questionId": { "type": "string", "maxLength": 64 },
+        "subject": { "type": "string", "enum": ["Physics", "Chemistry", "Mathematics", "Bridge Foundation"] },
+        "chapterId": { "type": "string", "maxLength": 64 },
+        "questionType": { "type": "string", "enum": ["mcq_single", "mcq_multiple", "numerical"] },
+        "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+        "content": { "type": "string", "maxLength": 2000 },
+        "options": { "type": "array" },
+        "correctAnswer": { "type": "string", "maxLength": 500 },
+        "explanation": { "type": "string", "maxLength": 2000 },
+        "sourceType": { "type": "string", "enum": ["JEE Main PYQ", "JEE Advanced PYQ", "Original Practice", "Bridge Concept"] }
+      },
+      "required": ["questionId", "subject", "questionType", "content", "correctAnswer"]
+    },
+    "MockTest": {
+      "title": "MockTest",
+      "description": "Mock examination configuration",
+      "type": "object",
+      "properties": {
+        "testId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 160 },
+        "examinationType": { "type": "string", "enum": ["JEE Main", "JEE Advanced", "Subject Test", "Chapter Quiz", "PYQ"] },
+        "durationMinutes": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "questionCount": { "type": "number" }
+      },
+      "required": ["testId", "title", "examinationType", "durationMinutes", "totalMarks"]
+    },
+    "TestAttempt": {
+      "title": "TestAttempt",
+      "description": "Record of a student's mock test submission",
+      "type": "object",
+      "properties": {
+        "attemptId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "testId": { "type": "string", "maxLength": 64 },
+        "testTitle": { "type": "string", "maxLength": 160 },
+        "score": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "accuracy": { "type": "number" },
+        "timeTakenSeconds": { "type": "number" },
+        "correctCount": { "type": "number" },
+        "incorrectCount": { "type": "number" },
+        "unattemptedCount": { "type": "number" },
+        "submittedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["attemptId", "studentId", "testId", "score"]
+    },
+    "StudentProgress": {
+      "title": "StudentProgress",
+      "description": "Overall student preparation tracking",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "completedChapterIds": { "type": "array" },
+        "studyHours": { "type": "number" },
+        "streakDays": { "type": "number" },
+        "dailyGoalHours": { "type": "number" },
+        "weakChapters": { "type": "array" },
+        "strongChapters": { "type": "array" }
+      },
+      "required": ["studentId"]
+    },
+    "StudyPlan": {
+      "title": "StudyPlan",
+      "description": "Customizable 90-day study roadmap and tasks",
+      "type": "object",
+      "properties": {
+        "planId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "tasks": { "type": "array" }
+      },
+      "required": ["planId", "studentId"]
+    },
+    "AIConversation": {
+      "title": "AIConversation",
+      "description": "Saved chats with Udaan AI Mentor",
+      "type": "object",
+      "properties": {
+        "conversationId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "subject": { "type": "string", "maxLength": 40 },
+        "messages": { "type": "array" }
+      },
+      "required": ["conversationId", "studentId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Student and faculty profiles"
+    },
+    "/subjects/{subjectId}": {
+      "schema": "Subject",
+      "description": "Academic subjects list"
+    },
+    "/chapters/{chapterId}": {
+      "schema": "Chapter",
+      "description": "Syllabus chapters"
+    },
+    "/studyMaterials/{materialId}": {
+      "schema": "StudyMaterial",
+      "description": "Notes and downloadable resources"
+    },
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Verified questions pool"
+    },
+    "/mockTests/{testId}": {
+      "schema": "MockTest",
+      "description": "Pre-configured mock examinations"
+    },
+    "/testAttempts/{attemptId}": {
+      "schema": "TestAttempt",
+      "description": "Student examination attempts"
+    },
+    "/studentProgress/{studentId}": {
+      "schema": "StudentProgress",
+      "description": "Aggregated student metrics and streaks"
+    },
+    "/studyPlans/{studentId}": {
+      "schema": "StudyPlan",
+      "description": "Student study schedule"
+    },
+    "/aiConversations/{conversationId}": {
+      "schema": "AIConversation",
+      "description": "Conversation threads with AI tutor"
+    }
+  }
+}
