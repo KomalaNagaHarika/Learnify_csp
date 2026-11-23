@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { SubjectName } from '../src/types';
 import {
@@ -34,8 +35,29 @@ interface PersistedStore {
   attempts: Record<string, MockTestAttemptResult>;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), '.data');
-const STORE_PATH = path.resolve(DATA_DIR, 'mock-test-store.json');
+function resolveStorePaths(): { dataDir: string; storePath: string } {
+  const preferredDir = process.env.VERCEL
+    ? path.join(os.tmpdir(), 'learnify-data')
+    : path.resolve(process.cwd(), '.data');
+  try {
+    if (!fs.existsSync(preferredDir)) {
+      fs.mkdirSync(preferredDir, { recursive: true });
+    }
+    fs.accessSync(preferredDir, fs.constants.W_OK);
+    return {
+      dataDir: preferredDir,
+      storePath: path.resolve(preferredDir, 'mock-test-store.json'),
+    };
+  } catch {
+    const tmpDir = path.join(os.tmpdir(), 'learnify-data');
+    return {
+      dataDir: tmpDir,
+      storePath: path.resolve(tmpDir, 'mock-test-store.json'),
+    };
+  }
+}
+
+const { dataDir: DATA_DIR, storePath: STORE_PATH } = resolveStorePaths();
 
 const VALID_OPTION_SET = new Set(['A', 'B', 'C', 'D']);
 

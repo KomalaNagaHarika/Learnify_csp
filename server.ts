@@ -23,6 +23,42 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// CORS configuration for cross-origin frontend deployments (e.g. Vercel -> external Node backend)
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://learnify-csp.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+const envOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+const appUrlOrigin = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+const allowedOrigins = new Set([
+  ...DEFAULT_ALLOWED_ORIGINS,
+  ...envOrigins,
+  ...(appUrlOrigin ? [appUrlOrigin] : []),
+]);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (
+    origin &&
+    (allowedOrigins.has(origin) ||
+      /^https:\/\/learnify-csp[a-z0-9-]*\.vercel\.app$/i.test(origin))
+  ) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 app.use(express.json({ limit: '256kb' }));
 
 // Health check endpoint
@@ -139,6 +175,11 @@ app.post('/api/mock-tests/:testId/start', (req, res) => {
     return;
   }
   res.status(201).json({ session: result });
+});
+
+// Return JSON 404 for unknown /api/* endpoints instead of HTML SPA fallback
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API endpoint not found.' });
 });
 
 // Server bootstrap
